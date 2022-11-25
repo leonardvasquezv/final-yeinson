@@ -29,7 +29,7 @@ export const ServicesPage = () => {
   const [description, setDescription] = useState('')
   const [date, setDate] = useState('')
   const [arrayData, setArrayData] = useState([])
-  const [idAndIdReq, setIdAndIdReq] = useState({})
+  const [idReq, setIdReq] = useState('')
   const [error, setError] = useState(null)
 
   useEffect(() => {
@@ -111,20 +111,22 @@ export const ServicesPage = () => {
     }
 
     const { uid } = state
+    
+    const id_req = nanoid()
 
     const newReq = {
-      id_req: nanoid(),
+      id_req: id_req,
       uid: uid,
       type_service: tipeService,
       service: service,
       description: description,
-      fecha: date
+      fecha: date,
     }
 
     setArrayData([newReq, ...arrayData])
 
-    const Doc = doc(collection(FirebaseDB, `/requerimientos`))
-    setDoc(Doc, newReq)
+    const docRef = doc(FirebaseDB, `/requerimientos/${id_req}`)
+    setDoc(docRef, newReq)
 
     clear()
 
@@ -139,9 +141,9 @@ export const ServicesPage = () => {
     setError(null)
   }
 
-  const deleteRequirement = (id, id_req) => {
+  const deleteRequirement = (id_req) => {
 
-    const docRef = doc(FirebaseDB, `/requerimientos/${id}`)
+    const docRef = doc(FirebaseDB, `/requerimientos/${id_req}`)
     deleteDoc(docRef)
 
     setArrayData(arrayData.filter(req => req.id_req !== id_req))
@@ -149,14 +151,14 @@ export const ServicesPage = () => {
   }
 
 
-  const editRequirement = (id, id_req) => {
+  const editRequirement = (idReq) => {
 
     setEditionMode(true)
-    setIdAndIdReq({ id, id_req })
+    setIdReq(idReq)
 
   }
 
-  const editar = (idAndIdReq) => {
+  const editar = (idReq) => {
 
     if (category === -1) {
       setError('Escoja una categoría, por favor.')
@@ -173,11 +175,10 @@ export const ServicesPage = () => {
       return
     }
 
-    const { id, id_req } = idAndIdReq
     const { uid } = state
 
     const newReq = {
-      id_req: nanoid(),
+      id_req: idReq,
       uid: uid,
       type_service: tipeService,
       service: service,
@@ -185,12 +186,13 @@ export const ServicesPage = () => {
       fecha: date
     }
 
-    const docRef = doc(FirebaseDB, `/requerimientos/${id}`)
+    const docRef = doc(FirebaseDB, `/requerimientos/${idReq}`)
     updateDoc(docRef, newReq)
 
-    const index = arrayData.findIndex(req => req.id_req === id_req)
+    const index = arrayData.findIndex(req => req.id_req === idReq)
     arrayData[index] = newReq
 
+    setIdReq('')
     setEditionMode(false)
     clear()
 
@@ -205,7 +207,7 @@ export const ServicesPage = () => {
   return (
     <div className="container">
       <div className="row">
-        <h1 className="display-2 animate__animated animate__fadeInLeftBig">Hola, {(state.displayName).split(" ")[0]}!</h1>
+        <h1 className="display-2 animate__animated animate__fadeInLeftBig">Hola, {state.displayName}!</h1>
         <div className="col-12 row">
           <div className="col-12 row">
             <h1 className="display-4 animate__animated animate__fadeIn">{editionMode ? 'Edita un requerimiento' : 'Crea un requerimiento'}</h1>
@@ -235,7 +237,7 @@ export const ServicesPage = () => {
               <input onChange={onChangeDate} className="form-control m-1" type="text" placeholder="Fecha" value={date} />
             </div>
             {
-              editionMode ? <button onClick={() => { editar(idAndIdReq) }} className="btn btn-success m-1 col-1">Actualizar</button>
+              editionMode ? <button onClick={() => { editar(idReq) }} className="btn btn-success m-1 col-1">Actualizar</button>
                 : <button onClick={crearRequirement} className="btn btn-success m-1 col-1">Crear</button>
             }
 
@@ -266,8 +268,8 @@ export const ServicesPage = () => {
                     <li className="list-group-item">Servicio: {req.service}</li>
                     <li className="list-group-item">Descripcion: {req.description}</li>
                     <li className="list-group-item">Fecha: {req.fecha}</li>
-                    <button onClick={() => editRequirement(req.id, req.id_req)} className={`btn btn-warning m-1  ${editionMode ? 'disabled' : null}`}>Editar</button>
-                    <button onClick={() => deleteRequirement(req.id, req.id_req)} className={`btn btn-danger m-1  ${editionMode ? 'disabled' : null}`}>Eliminar</button>
+                    <button onClick={() => editRequirement(req.id_req)} className={`btn btn-warning m-1  ${editionMode ? 'disabled' : null}`}>Editar</button>
+                    <button onClick={() => deleteRequirement(req.id_req)} className={`btn btn-danger m-1  ${editionMode ? 'disabled' : null}`}>Eliminar</button>
                   </ul>
                 </div>
               ))
